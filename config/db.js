@@ -10,11 +10,13 @@ const connectDB = async () => {
   const mongoUri = process.env.MONGO_URI;
 
   if (!mongoUri || mongoUri.includes('your_username:your_password') || mongoUri.includes('user:pass')) {
-    console.warn('⚠️ MONGO_URI is not properly configured in environment variables.');
-    return;
+    throw new Error('MONGO_URI environment variable is missing or invalid in server settings');
   }
 
   try {
+    // Disable command buffering so queries fail fast if connection fails
+    mongoose.set('bufferCommands', false);
+
     const conn = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
     });
