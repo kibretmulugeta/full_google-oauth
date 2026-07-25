@@ -4,6 +4,8 @@ A production-ready, full-stack Google OAuth 2.0 authentication module built with
 
 Designed with **Dual-Deployment Architecture** to run seamlessly on both **Vercel** (Serverless Functions) and **Render** (Standalone Node Server).
 
+*(Deployment Version: v1.0.1)*
+
 ---
 
 ## 🛠️ Tech Stack & Architecture
