@@ -29,7 +29,11 @@ const connectDB = async () => {
         const auth = urlObj.username ? `${urlObj.username}:${urlObj.password}@` : '';
         const search = urlObj.search || '?retryWrites=true&w=majority';
 
-        const shardHosts = `${hostname.replace('.mongodb.net', '')}-shard-00-00.${hostname}:27017,${hostname.replace('.mongodb.net', '')}-shard-00-01.${hostname}:27017,${hostname.replace('.mongodb.net', '')}-shard-00-02.${hostname}:27017`;
+        const parts = hostname.split('.');
+        const clusterName = parts[0] || 'cluster0';
+        const domain = parts.length > 1 ? parts.slice(1).join('.') : 'mongodb.net';
+
+        const shardHosts = `${clusterName}-shard-00-00.${domain}:27017,${clusterName}-shard-00-01.${domain}:27017,${clusterName}-shard-00-02.${domain}:27017`;
         
         const fallbackUri = `mongodb://${auth}${shardHosts}${dbName}${search}${search.includes('?') ? '&' : '?'}ssl=true&authSource=admin`;
 
