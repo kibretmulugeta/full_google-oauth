@@ -12,6 +12,9 @@ const authRoutes = require('../routes/authRoutes');
 
 const app = express();
 
+// Enable trust proxy for reverse proxies (Vercel, Render) so req.protocol correctly detects https
+app.set('trust proxy', 1);
+
 // 1. Database Connection Middleware (ensures MongoDB is connected before handling any request in Serverless)
 app.use(async (req, res, next) => {
   try {

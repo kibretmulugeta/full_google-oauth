@@ -6,7 +6,10 @@ const configurePassport = () => {
   const clientID = process.env.GOOGLE_CLIENT_ID || 'dummy_id';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || 'dummy_secret';
 
-  const baseUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : '';
+  let baseUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.trim().replace(/\/$/, '') : '';
+  if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    baseUrl = `https://${baseUrl}`;
+  }
   const callbackURL = baseUrl ? `${baseUrl}/auth/google/callback` : '/auth/google/callback';
 
   passport.use(
