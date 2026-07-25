@@ -1,0 +1,32 @@
+{
+  "name": "google-oauth-auth-module",
+  "version": "1.0.0",
+  "description": "Complete end-to-end Google OAuth authentication module with Express, MongoDB Atlas, Passport.js, JWT, and dual Vercel & Render deployment support.",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
+  },
+  "keywords": [
+    "express",
+    "google-oauth",
+    "passport",
+    "jwt",
+    "mongodb",
+    "mongoose",
+    "vercel",
+    "render"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}
