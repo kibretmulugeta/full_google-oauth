@@ -6,12 +6,15 @@ const configurePassport = () => {
   const clientID = process.env.GOOGLE_CLIENT_ID || 'dummy_id';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || 'dummy_secret';
 
+  const baseUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : '';
+  const callbackURL = baseUrl ? `${baseUrl}/auth/google/callback` : '/auth/google/callback';
+
   passport.use(
     new GoogleStrategy(
       {
         clientID: clientID,
         clientSecret: clientSecret,
-        callbackURL: '/auth/google/callback',
+        callbackURL: callbackURL,
         proxy: true, // required for hosting behind proxies like Render or Vercel
       },
       async (accessToken, refreshToken, profile, done) => {
