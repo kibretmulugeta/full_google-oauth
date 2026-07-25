@@ -7,7 +7,10 @@ const connectDB = async () => {
     return;
   }
 
-  const mongoUri = process.env.MONGO_URI ? process.env.MONGO_URI.trim() : '';
+  let mongoUri = process.env.MONGO_URI ? process.env.MONGO_URI.trim() : '';
+  if (mongoUri && !mongoUri.includes('authSource=')) {
+    mongoUri += mongoUri.includes('?') ? '&authSource=admin' : '?authSource=admin';
+  }
 
   if (!mongoUri || mongoUri.includes('your_username:your_password') || mongoUri.includes('user:pass')) {
     throw new Error('MONGO_URI environment variable is missing or invalid in server settings');
