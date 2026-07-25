@@ -24,15 +24,14 @@ router.get(
  * @desc    Handles Google OAuth callback, generates JWT, sets HttpOnly cookie, and redirects
  * @access  Public
  */
-router.get(
-  '/google/callback',
-  passport.authenticate('google', {
-    session: false,
-    failureRedirect: '/?error=google_auth_failed',
-  }),
-  (req, res) => {
+router.get('/google/callback', (req, res, next) => {
+  passport.authenticate('google', { session: false }, (err, user, info) => {
+    if (err || !user) {
+      console.error('Google Auth Error:', err || info);
+      return res.redirect('/?error=google_auth_failed');
+    }
+
     try {
-      const user = req.user;
       const jwtSecret = process.env.JWT_SECRET || 'default_dev_jwt_secret_key_12345';
 
       // Generate JWT containing internal MongoDB _id
@@ -56,13 +55,13 @@ router.get(
       });
 
       // Redirect to dashboard page
-      res.redirect('/dashboard');
+      return res.redirect('/dashboard');
     } catch (error) {
       console.error('Error handling auth callback:', error);
-      res.redirect('/?error=server_error');
+      return res.redirect('/?error=server_error');
     }
-  }
-);
+  })(req, res, next);
+});
 
 /**
  * @route   GET /auth/me

@@ -12,8 +12,15 @@ const authRoutes = require('../routes/authRoutes');
 
 const app = express();
 
-// 1. Connect to MongoDB Atlas
-connectDB();
+// 1. Database Connection Middleware (ensures MongoDB is connected before handling any request in Serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('Database connection error in request middleware:', err);
+  }
+  next();
+});
 
 // 2. Configure Passport Strategy
 configurePassport();
