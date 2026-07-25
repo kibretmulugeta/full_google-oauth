@@ -1,10 +1,4 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
-
-// Execute at top-level module load time
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (e) {}
 
 let isConnected = false;
 
@@ -21,28 +15,26 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
     });
     isConnected = true;
     console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
   } catch (error) {
-    // If SRV DNS lookup fails (querySrv ENOTFOUND), fallback to direct Atlas shard seed list URI
+    // If SRV lookup fails in serverless, try standard Atlas seed list connection string
     if (error.message && error.message.includes('querySrv ENOTFOUND') && mongoUri.startsWith('mongodb+srv://')) {
-      console.warn('⚠️ SRV DNS lookup failed. Attempting direct Atlas shard connection fallback...');
       try {
-        const directUri = mongoUri
-          .replace('mongodb+srv://', 'mongodb://')
-          .replace(/@([^/]+)/, (match, host) => {
-            const hostClean = host.split('?')[0];
-            return `@${hostClean}-shard-00-00.${hostClean}:27017,${hostClean}-shard-00-01.${hostClean}:27017,${hostClean}-shard-00-02.${hostClean}:27017`;
-          });
+        const urlObj = new URL(mongoUri.replace('mongodb+srv://', 'http://'));
+        const hostname = urlObj.hostname; // e.g. "cluster0.vfutu5u.mongodb.net"
+        const dbName = urlObj.pathname || ''; // e.g. "/google_auth_db"
+        const auth = urlObj.username ? `${urlObj.username}:${urlObj.password}@` : '';
+        const search = urlObj.search || '?retryWrites=true&w=majority';
 
-        const fallbackUri = directUri.includes('?')
-          ? `${directUri}&ssl=true&authSource=admin`
-          : `${directUri}?ssl=true&authSource=admin`;
+        const shardHosts = `${hostname.replace('.mongodb.net', '')}-shard-00-00.${hostname}:27017,${hostname.replace('.mongodb.net', '')}-shard-00-01.${hostname}:27017,${hostname.replace('.mongodb.net', '')}-shard-00-02.${hostname}:27017`;
+        
+        const fallbackUri = `mongodb://${auth}${shardHosts}${dbName}${search}${search.includes('?') ? '&' : '?'}ssl=true&authSource=admin`;
 
         const conn = await mongoose.connect(fallbackUri, {
-          serverSelectionTimeoutMS: 5000,
+          serverSelectionTimeoutMS: 10000,
         });
         isConnected = true;
         console.log(`✅ MongoDB Atlas Direct Seed List Connected: ${conn.connection.host}`);
