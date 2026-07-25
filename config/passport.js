@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
+const connectDB = require('./db');
 
 const configurePassport = () => {
   const clientID = process.env.GOOGLE_CLIENT_ID || 'dummy_id';
@@ -22,6 +23,9 @@ const configurePassport = () => {
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          // Ensure MongoDB connection is fully established before querying models in serverless environment
+          await connectDB();
+
           const googleId = profile.id;
           const email = profile.emails && profile.emails[0] ? profile.emails[0].value : '';
           const displayName = profile.displayName || profile.username || 'Google User';

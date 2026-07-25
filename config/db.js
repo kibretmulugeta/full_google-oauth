@@ -14,9 +14,6 @@ const connectDB = async () => {
   }
 
   try {
-    // Disable command buffering so queries fail fast if connection fails
-    mongoose.set('bufferCommands', false);
-
     const conn = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
     });
