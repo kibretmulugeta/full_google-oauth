@@ -16,6 +16,7 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 10000,
+      family: 4, // Force IPv4 resolution to prevent IPv6 timeouts on Vercel/AWS
     });
     isConnected = true;
     console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
@@ -39,6 +40,7 @@ const connectDB = async () => {
 
         const conn = await mongoose.connect(fallbackUri, {
           serverSelectionTimeoutMS: 10000,
+          family: 4,
         });
         isConnected = true;
         console.log(`✅ MongoDB Atlas Direct Seed List Connected: ${conn.connection.host}`);
