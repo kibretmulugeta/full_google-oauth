@@ -15,20 +15,20 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 10000,
-      family: 4, // Force IPv4 resolution to prevent IPv6 timeouts on Vercel/AWS
+      serverSelectionTimeoutMS: 8000,
+      family: 4,
     });
     isConnected = true;
     console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
   } catch (error) {
-    // If SRV lookup fails in serverless, try standard Atlas seed list connection string
-    if (error.message && error.message.includes('querySrv ENOTFOUND') && mongoUri.startsWith('mongodb+srv://')) {
+    console.warn(`⚠️ Primary Mongo connection failed (${error.message}). Trying direct Atlas shard fallback...`);
+
+    if (mongoUri.startsWith('mongodb+srv://')) {
       try {
         const urlObj = new URL(mongoUri.replace('mongodb+srv://', 'http://'));
         const hostname = urlObj.hostname; // e.g. "cluster0.vfutu5u.mongodb.net"
-        const dbName = urlObj.pathname || ''; // e.g. "/google_auth_db"
+        const dbName = urlObj.pathname || '/google_auth_db';
         const auth = urlObj.username ? `${urlObj.username}:${urlObj.password}@` : '';
-        const search = urlObj.search || '?retryWrites=true&w=majority';
 
         const parts = hostname.split('.');
         const clusterName = parts[0] || 'cluster0';
@@ -36,7 +36,7 @@ const connectDB = async () => {
 
         const shardHosts = `${clusterName}-shard-00-00.${domain}:27017,${clusterName}-shard-00-01.${domain}:27017,${clusterName}-shard-00-02.${domain}:27017`;
         
-        const fallbackUri = `mongodb://${auth}${shardHosts}${dbName}${search}${search.includes('?') ? '&' : '?'}ssl=true&authSource=admin`;
+        const fallbackUri = `mongodb://${auth}${shardHosts}${dbName}?ssl=true&authSource=admin&retryWrites=true&w=majority`;
 
         const conn = await mongoose.connect(fallbackUri, {
           serverSelectionTimeoutMS: 10000,
@@ -46,13 +46,13 @@ const connectDB = async () => {
         console.log(`✅ MongoDB Atlas Direct Seed List Connected: ${conn.connection.host}`);
         return;
       } catch (fallbackErr) {
-        console.error(`❌ Direct fallback connection error: ${fallbackErr.message}`);
-        throw fallbackErr;
+        const masked = mongoUri.replace(/:([^@]+)@/, ':****@');
+        throw new Error(`DB Connect Failed [URI: ${masked}]: ${fallbackErr.message}`);
       }
     }
 
-    console.error(`❌ MongoDB connection error: ${error.message}`);
-    throw error;
+    const masked = mongoUri.replace(/:([^@]+)@/, ':****@');
+    throw new Error(`DB Connect Failed [URI: ${masked}]: ${error.message}`);
   }
 };
 
