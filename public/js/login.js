@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const error = urlParams.get('error');
 
   if (error) {
-    let message = 'Authentication failed. Please try again.';
+    let message = decodeURIComponent(error);
     if (error === 'google_auth_failed') {
       message = 'Google authentication was cancelled or failed.';
     } else if (error === 'server_error') {

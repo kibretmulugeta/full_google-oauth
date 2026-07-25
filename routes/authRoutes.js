@@ -27,8 +27,9 @@ router.get(
 router.get('/google/callback', (req, res, next) => {
   passport.authenticate('google', { session: false }, (err, user, info) => {
     if (err || !user) {
-      console.error('Google Auth Error:', err || info);
-      return res.redirect('/?error=google_auth_failed');
+      const errMsg = err ? (err.message || String(err)) : (info ? (info.message || String(info)) : 'google_auth_failed');
+      console.error('Google Auth Error Detail:', errMsg);
+      return res.redirect('/?error=' + encodeURIComponent(errMsg));
     }
 
     try {
