@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 
 let isConnected = false;
 
@@ -7,7 +8,14 @@ const connectDB = async () => {
     return;
   }
 
-  const mongoUri = process.env.MONGO_URI;
+  // Set reliable public DNS servers to resolve MongoDB Atlas SRV records in serverless environments
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (dnsErr) {
+    console.warn('Custom DNS setServers warning:', dnsErr.message);
+  }
+
+  const mongoUri = process.env.MONGO_URI ? process.env.MONGO_URI.trim() : '';
 
   if (!mongoUri || mongoUri.includes('your_username:your_password') || mongoUri.includes('user:pass')) {
     throw new Error('MONGO_URI environment variable is missing or invalid in server settings');
