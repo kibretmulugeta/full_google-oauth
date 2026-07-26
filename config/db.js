@@ -68,12 +68,14 @@ const connectDB = async () => {
         return;
       } catch (fallbackErr) {
         const reason = fallbackErr.reason ? JSON.stringify(fallbackErr.reason) : fallbackErr.message;
-        throw new Error(`DB Connection Failed: ${reason}`);
+        console.error('MongoDB Atlas Connection Error:', reason);
+        throw new Error('Database Connection Failed. Please check your MONGO_URI in .env (Ensure cluster is active & 0.0.0.0/0 IP is allowed in MongoDB Atlas Network Access).');
       }
     }
 
     const reason = error.reason ? JSON.stringify(error.reason) : error.message;
-    throw new Error(`DB Connection Failed: ${reason}`);
+    console.error('MongoDB Atlas Connection Error:', reason);
+    throw new Error('Database Connection Failed. Please check your MONGO_URI in .env (Ensure cluster is active & 0.0.0.0/0 IP is allowed in MongoDB Atlas Network Access).');
   }
 };
 

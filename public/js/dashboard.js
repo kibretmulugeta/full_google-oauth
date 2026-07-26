@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const user = data.user;
 
       // Populate user info
+      avatarImg.onerror = () => {
+        avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=818cf8&color=fff`;
+      };
       if (user.avatarUrl) {
         avatarImg.src = user.avatarUrl;
       } else {

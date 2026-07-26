@@ -13,6 +13,8 @@ const configurePassport = () => {
   }
   const callbackURL = baseUrl ? `${baseUrl}/auth/google/callback` : '/auth/google/callback';
 
+  console.log(`🔑 Passport Google Strategy Callback URL: ${callbackURL}`);
+
   passport.use(
     new GoogleStrategy(
       {
