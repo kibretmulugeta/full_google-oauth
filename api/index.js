@@ -9,6 +9,8 @@ const passport = require('passport');
 const connectDB = require('../config/db');
 const configurePassport = require('../config/passport');
 const authRoutes = require('../routes/authRoutes');
+const taskRoutes = require('../routes/taskRoutes');
+const adminRoutes = require('../routes/adminRoutes');
 
 const app = express();
 
@@ -48,8 +50,10 @@ app.use(passport.initialize());
 // 4. Static Files Middleware
 app.use(express.static(path.join(__dirname, '../public')));
 
-// 5. Auth API Routes
+// 5. Auth & API Routes
 app.use('/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 6. Frontend Route Handlers
 app.get('/', (req, res) => {
@@ -58,6 +62,10 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/dashboard.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin.html'));
 });
 
 // Health check endpoint

@@ -35,12 +35,13 @@ router.get('/google/callback', (req, res, next) => {
     try {
       const jwtSecret = process.env.JWT_SECRET || 'default_dev_jwt_secret_key_12345';
 
-      // Generate JWT containing internal MongoDB _id
+      // Generate JWT containing internal MongoDB _id and role
       const token = jwt.sign(
         {
           id: user._id,
           googleId: user.googleId,
           email: user.email,
+          role: user.role || 'user',
         },
         jwtSecret,
         { expiresIn: '7d' }
@@ -55,13 +56,90 @@ router.get('/google/callback', (req, res, next) => {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
-      // Redirect to dashboard page
+      // Redirect based on role or dashboard
+      if (user.role === 'admin') {
+        return res.redirect('/admin');
+      }
       return res.redirect('/dashboard');
     } catch (error) {
       console.error('Error handling auth callback:', error);
       return res.redirect('/?error=server_error');
     }
   })(req, res, next);
+});
+
+/**
+ * @route   POST /auth/admin-login
+ * @desc    Authenticate admin using Admin Passcode / Key
+ * @access  Public
+ */
+router.post('/admin-login', async (req, res) => {
+  try {
+    const { email, adminKey } = req.body;
+    const requiredKey = process.env.ADMIN_KEY || 'admin123';
+
+    if (!adminKey || adminKey !== requiredKey) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid Admin Key / Secret Passcode',
+      });
+    }
+
+    const adminEmail = (email && email.trim()) ? email.trim().toLowerCase() : 'admin@system.local';
+
+    // Find or create admin user
+    let user = await User.findOne({ email: adminEmail });
+    if (!user) {
+      user = await User.create({
+        googleId: 'admin_' + Date.now(),
+        email: adminEmail,
+        displayName: 'System Admin',
+        role: 'admin',
+        avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=ef4444&color=fff',
+      });
+    } else if (user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+    }
+
+    const jwtSecret = process.env.JWT_SECRET || 'default_dev_jwt_secret_key_12345';
+    const token = jwt.sign(
+      {
+        id: user._id,
+        googleId: user.googleId,
+        email: user.email,
+        role: 'admin',
+      },
+      jwtSecret,
+      { expiresIn: '7d' }
+    );
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Admin authentication successful',
+      user: {
+        id: user._id,
+        email: user.email,
+        displayName: user.displayName,
+        role: user.role,
+      },
+      redirect: '/admin',
+    });
+  } catch (error) {
+    console.error('Error during admin login:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during admin authentication',
+    });
+  }
 });
 
 /**
@@ -73,7 +151,7 @@ router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-__v');
     if (!user) {
-      return res.status(44).json({
+      return res.status(404).json({
         success: false,
         message: 'User not found in database',
       });
@@ -87,6 +165,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         email: user.email,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        role: user.role || 'user',
         createdAt: user.createdAt,
       },
     });

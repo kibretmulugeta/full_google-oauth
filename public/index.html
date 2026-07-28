@@ -3,37 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In - Google OAuth Module</title>
-  <meta name="description" content="Secure Google Account authentication system powered by Node.js, Express, MongoDB Atlas, and JWT.">
+  <title>Sign In - Authentication System</title>
+  <meta name="description" content="Secure User and Admin Portal powered by Google OAuth 2.0, Express, MongoDB Atlas, and JWT.">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <main class="container">
     <div class="card">
-      <div class="brand-badge">
+      <!-- Brand Badge -->
+      <div id="portal-badge" class="brand-badge">
         <svg viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
         </svg>
-        <span>Secure Auth Protocol</span>
+        <span id="portal-badge-text">User Portal</span>
       </div>
 
-      <h1>Welcome Back</h1>
-      <p class="subtitle">Sign in with your Google Account to access your personal dashboard.</p>
+      <h1 id="portal-title">Welcome Back</h1>
+      <p id="portal-subtitle" class="subtitle">Sign in with your Google Account to manage your personal tasks.</p>
+
+      <!-- Portal Selection Tabs -->
+      <div class="tab-group">
+        <button id="tab-user" class="tab-btn active" type="button">User Login</button>
+        <button id="tab-admin" class="tab-btn" type="button">Admin Portal</button>
+      </div>
 
       <div id="error-banner" class="alert-error"></div>
 
-      <a id="google-login-btn" href="/auth/google" class="btn-google">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.3 7.31 24 12 24z"/>
-          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
-          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-        </svg>
-        <span>Sign in with Google</span>
-      </a>
+      <!-- User Portal Section (Google OAuth) -->
+      <div id="user-portal-section">
+        <a id="google-login-btn" href="/auth/google" class="btn-google">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span>Sign in with Google</span>
+        </a>
+      </div>
+
+      <!-- Admin Portal Section (Admin Passcode / Key) -->
+      <div id="admin-portal-section" class="hidden">
+        <form id="admin-login-form">
+          <div class="form-group">
+            <label for="admin-email" class="form-label">Admin Email</label>
+            <input type="email" id="admin-email" class="form-input" placeholder="admin@system.local" required />
+          </div>
+
+          <div class="form-group">
+            <label for="admin-key" class="form-label">Admin Secret Key / Passcode</label>
+            <input type="password" id="admin-key" class="form-input" placeholder="Enter Admin Secret (default: admin123)" required />
+          </div>
+
+          <button type="submit" class="btn-primary btn-admin">Sign In as Admin</button>
+        </form>
+      </div>
 
       <footer>
-        &copy; 2026 OAuth Authentication Module
+        &copy; 2026 Authentication System with Role-Based Access Control
       </footer>
     </div>
   </main>

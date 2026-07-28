@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - System Management</title>
+  <meta name="description" content="Admin Dashboard for managing users, roles, and global system task analytics.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Admin Navbar -->
+  <header class="navbar">
+    <a href="/admin" class="nav-brand">
+      <svg viewBox="0 0 24 24" style="fill: #fca5a5;">
+        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+      </svg>
+      <span>Admin Dashboard</span>
+    </a>
+    <div class="nav-actions">
+      <a href="/dashboard" class="btn-nav">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 11 12 14 22 4"></polyline>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        <span>User Section</span>
+      </a>
+      <a href="/auth/logout" class="btn-nav btn-logout">
+        <span>Sign Out</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="container-wide">
+    <!-- Skeleton Loading -->
+    <div id="loading-card" class="card">
+      <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 20px;"></div>
+      <div class="skeleton" style="height: 250px; width: 100%;"></div>
+    </div>
+
+    <!-- Active Admin Content -->
+    <div id="admin-content" class="card card-dashboard hidden">
+      <!-- Admin Header Banner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <div class="brand-badge badge-admin-banner">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+            </svg>
+            <span>Full System Administrator</span>
+          </div>
+          <h1 style="font-size: 1.8rem;">System Management & Analytics</h1>
+          <p id="admin-welcome-text" style="color: var(--text-secondary); font-size: 0.9rem;">Overview of registered users, task counts, and administrative privileges.</p>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="admin-grid">
+        <div class="stat-card">
+          <div id="stat-total-users" class="stat-num">0</div>
+          <div class="stat-title">Total Registered Users</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-total-admins" class="stat-num stat-admin">0</div>
+          <div class="stat-title">System Administrators</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-total-tasks" class="stat-num" style="color: var(--accent-blue);">0</div>
+          <div class="stat-title">Total System Tasks</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-completion-rate" class="stat-num" style="color: var(--accent-emerald);">0%</div>
+          <div class="stat-title">Task Completion Rate</div>
+        </div>
+      </div>
+
+      <!-- User Management Section -->
+      <div style="margin-bottom: 36px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2>User Accounts & Roles</h2>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Manage roles and permissions</span>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Tasks</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr>
+                <td colspan="6" class="empty-state">Loading user records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Global Task Monitor Section -->
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2>System Task Monitor</h2>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Live overview of all user tasks</span>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Task Title</th>
+                <th>Owner</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Created Date</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-table-body">
+              <tr>
+                <td colspan="5" class="empty-state">Loading system tasks...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer>
+        Admin Control Center &bull; Connected via MongoDB Atlas
+      </footer>
+    </div>
+  </main>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
