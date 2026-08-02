@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statCompletionRate = document.getElementById('stat-completion-rate');
 
   const usersTableBody = document.getElementById('users-table-body');
+  const auditTableBody = document.getElementById('audit-table-body');
   const tasksTableBody = document.getElementById('tasks-table-body');
 
   let currentAdminId = null;
@@ -28,8 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await response.json();
 
     if (data.success && data.user) {
-      if (data.user.role !== 'admin') {
-        // Regular user trying to access admin dashboard -> redirect to user dashboard
+      if (data.user.role !== 'admin' && data.user.role !== 'superadmin') {
         window.location.href = '/dashboard';
         return;
       }
@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadingCard.classList.add('hidden');
       adminContent.classList.remove('hidden');
 
-      // Load Admin Dashboard Data
       await loadAdminDashboard();
     } else {
       window.location.href = '/';
@@ -55,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([
       fetchStats(),
       fetchUsers(),
+      fetchAuditLogs(),
       fetchTasks(),
     ]);
   }
@@ -101,8 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     usersTableBody.innerHTML = '';
     users.forEach(u => {
       const tr = document.createElement('tr');
-
-      const roleBadgeClass = u.role === 'admin' ? 'badge-admin' : 'badge-user';
+      const roleBadgeClass = u.role === 'admin' || u.role === 'superadmin' ? 'badge-admin' : 'badge-user';
       const avatarUrl = u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName)}&background=818cf8&color=fff`;
 
       const formattedDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', {
@@ -146,7 +145,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       usersTableBody.appendChild(tr);
     });
 
-    // Attach Event Listeners
     document.querySelectorAll('.toggle-role-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.getAttribute('data-id');
@@ -166,6 +164,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Fetch Security Audit Logs
+  async function fetchAuditLogs() {
+    try {
+      const res = await fetch('/api/admin/audit-logs');
+      const data = await res.json();
+      if (data.success && data.logs) {
+        renderAuditLogs(data.logs);
+      }
+    } catch (err) {
+      console.error('Error fetching audit logs:', err);
+    }
+  }
+
+  function renderAuditLogs(logs) {
+    if (!logs || logs.length === 0) {
+      auditTableBody.innerHTML = `<tr><td colspan="5" class="empty-state">No security logs recorded yet.</td></tr>`;
+      return;
+    }
+
+    auditTableBody.innerHTML = '';
+    logs.forEach(log => {
+      const tr = document.createElement('tr');
+      const date = new Date(log.timestamp).toLocaleString();
+      const actionBadge = log.action.includes('SUCCESS') ? 'priority-low' : (log.action.includes('FAILED') || log.action.includes('LOCKED')) ? 'priority-high' : 'priority-medium';
+
+      tr.innerHTML = `
+        <td style="font-size:0.8rem; color:var(--text-muted);">${date}</td>
+        <td><span class="badge ${actionBadge}">${log.action}</span></td>
+        <td style="font-size:0.85rem;">${escapeHtml(log.email || 'N/A')}</td>
+        <td style="font-family:monospace; font-size:0.8rem; color:var(--text-secondary);">${escapeHtml(log.ipAddress)}</td>
+        <td style="font-size:0.85rem; color:var(--text-secondary);">${escapeHtml(log.details || '-')}</td>
+      `;
+      auditTableBody.appendChild(tr);
+    });
+  }
+
   // Fetch Global Tasks
   async function fetchTasks() {
     try {
@@ -180,7 +214,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Render Global Tasks Table
   function renderTasks(tasks) {
     if (!tasks || tasks.length === 0) {
       tasksTableBody.innerHTML = `<tr><td colspan="5" class="empty-state">No system tasks created yet.</td></tr>`;
@@ -221,7 +254,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Action: Update User Role
   async function updateUserRole(userId, newRole) {
     try {
       const res = await fetch(`/api/admin/users/${userId}/role`, {
@@ -241,7 +273,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Action: Delete User
   async function deleteUser(userId) {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -267,3 +298,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/"/g, '&quot;');
   }
 });
+

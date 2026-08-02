@@ -200,4 +200,21 @@ router.get('/tasks', async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/admin/audit-logs
+ * @desc    Get system security audit logs
+ * @access  Private (Admin Only)
+ */
+router.get('/audit-logs', async (req, res) => {
+  try {
+    const AuditLog = require('../models/AuditLog');
+    const logs = await AuditLog.find().sort({ timestamp: -1 }).limit(100);
+    res.json({ success: true, logs });
+  } catch (error) {
+    console.error('Fetch Audit Logs Error:', error);
+    res.status(500).json({ success: false, message: 'Error retrieving audit logs' });
+  }
+});
+
 module.exports = router;
+

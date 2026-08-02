@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In - Authentication System</title>
-  <meta name="description" content="Secure User and Admin Portal powered by Google OAuth 2.0, Express, MongoDB Atlas, and JWT.">
+  <title>Universal Authentication Platform</title>
+  <meta name="description" content="Production-ready Universal Authentication System with Google & GitHub OAuth, local sign up, 2FA, RBAC, and multi-account session management.">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -15,35 +15,135 @@
         <svg viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
         </svg>
-        <span id="portal-badge-text">User Portal</span>
+        <span id="portal-badge-text">Universal Auth Service</span>
       </div>
 
-      <h1 id="portal-title">Welcome Back</h1>
-      <p id="portal-subtitle" class="subtitle">Sign in with your Google Account to manage your personal tasks.</p>
+      <h1 id="portal-title">Welcome</h1>
+      <p id="portal-subtitle" class="subtitle">Sign in or register a new account to continue.</p>
 
-      <!-- Portal Selection Tabs -->
+      <!-- Portal Navigation Tabs -->
       <div class="tab-group">
-        <button id="tab-user" class="tab-btn active" type="button">User Login</button>
-        <button id="tab-admin" class="tab-btn" type="button">Admin Portal</button>
+        <button id="tab-login" class="tab-btn active" type="button">Login</button>
+        <button id="tab-signup" class="tab-btn" type="button">Sign Up</button>
+        <button id="tab-admin" class="tab-btn" type="button">Admin</button>
       </div>
 
       <div id="error-banner" class="alert-error"></div>
+      <div id="success-banner" class="alert-success"></div>
 
-      <!-- User Portal Section (Google OAuth) -->
-      <div id="user-portal-section">
-        <a id="google-login-btn" href="/auth/google" class="btn-google">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.3 7.31 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-          </svg>
-          <span>Sign in with Google</span>
-        </a>
+      <!-- 1. LOGIN SECTION -->
+      <div id="login-section">
+        <form id="local-login-form">
+          <div class="form-group">
+            <label for="login-email" class="form-label">Email Address</label>
+            <input type="email" id="login-email" class="form-input" placeholder="you@domain.com" required />
+          </div>
+
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required />
+          </div>
+
+          <!-- MFA Field (Hidden until required) -->
+          <div id="mfa-group" class="form-group hidden">
+            <label for="mfa-code" class="form-label">2FA Authenticator Passcode (6 digits)</label>
+            <input type="text" id="mfa-code" class="form-input" placeholder="123456" maxlength="6" />
+          </div>
+
+          <div class="form-footer-link">
+            <a href="#" id="forgot-password-link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn-primary">Sign In</button>
+        </form>
+
+        <div class="divider">
+          <span>OR CONTINUE WITH</span>
+        </div>
+
+        <!-- OAuth Providers -->
+        <div class="oauth-group">
+          <a href="/auth/google" class="btn-oauth btn-google">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.3 7.31 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span>Google</span>
+          </a>
+
+          <a href="/auth/github" class="btn-oauth btn-github">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </div>
+
+        <!-- Add Different Account Section -->
+        <div class="account-switcher-section">
+          <div class="account-switcher-header">
+            <span>Saved Accounts</span>
+            <button id="add-account-btn" type="button" class="btn-text">+ Add Different Account</button>
+          </div>
+          <div id="saved-accounts-list" class="accounts-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
       </div>
 
-      <!-- Admin Portal Section (Admin Passcode / Key) -->
-      <div id="admin-portal-section" class="hidden">
+      <!-- 2. REGISTER SECTION (First Signup) -->
+      <div id="signup-section" class="hidden">
+        <form id="local-signup-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="signup-firstname" class="form-label">First Name</label>
+              <input type="text" id="signup-firstname" class="form-input" placeholder="John" required />
+            </div>
+            <div class="form-group">
+              <label for="signup-lastname" class="form-label">Last Name</label>
+              <input type="text" id="signup-lastname" class="form-input" placeholder="Doe" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-email" class="form-label">Email Address</label>
+            <input type="email" id="signup-email" class="form-input" placeholder="john.doe@domain.com" required />
+          </div>
+
+          <div class="form-group">
+            <label for="signup-phone" class="form-label">Phone Number</label>
+            <input type="tel" id="signup-phone" class="form-input" placeholder="+1 555-0199" required />
+          </div>
+
+          <div class="form-group">
+            <label for="signup-password" class="form-label">Password</label>
+            <input type="password" id="signup-password" class="form-input" placeholder="••••••••" minlength="6" required />
+          </div>
+
+          <button type="submit" class="btn-primary">Register Account</button>
+        </form>
+      </div>
+
+      <!-- 3. ADMIN PORTAL SECTION -->
+      <div id="admin-section" class="hidden">
+        <div class="admin-oauth-wrapper">
+          <a href="/auth/google" class="btn-oauth btn-google btn-block">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.3 7.31 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span>Sign in as Admin with Google</span>
+          </a>
+        </div>
+
+        <div class="divider">
+          <span>OR ADMIN KEY</span>
+        </div>
+
         <form id="admin-login-form">
           <div class="form-group">
             <label for="admin-email" class="form-label">Admin Email</label>
@@ -51,16 +151,35 @@
           </div>
 
           <div class="form-group">
-            <label for="admin-key" class="form-label">Admin Secret Key / Passcode</label>
+            <label for="admin-key" class="form-label">Admin Passcode / Secret Key</label>
             <input type="password" id="admin-key" class="form-input" placeholder="Enter Admin Secret (default: admin123)" required />
           </div>
 
-          <button type="submit" class="btn-primary btn-admin">Sign In as Admin</button>
+          <button type="submit" class="btn-primary btn-admin">Admin Key Login</button>
         </form>
       </div>
 
+      <!-- Forgot Password Modal -->
+      <div id="forgot-modal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Reset Password</h3>
+          <p class="subtitle">Enter your email address to generate a password reset token.</p>
+          <form id="forgot-password-form">
+            <div class="form-group">
+              <label for="forgot-email" class="form-label">Email Address</label>
+              <input type="email" id="forgot-email" class="form-input" placeholder="you@domain.com" required />
+            </div>
+            <div id="reset-token-display" class="alert-info hidden"></div>
+            <div class="modal-actions">
+              <button type="button" id="close-forgot-modal" class="btn-secondary">Cancel</button>
+              <button type="submit" class="btn-primary">Request Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <footer>
-        &copy; 2026 Authentication System with Role-Based Access Control
+        &copy; 2026 Permanent Universal Authentication System
       </footer>
     </div>
   </main>
@@ -68,3 +187,4 @@
   <script src="/js/login.js"></script>
 </body>
 </html>
+

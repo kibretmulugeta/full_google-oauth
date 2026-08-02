@@ -5,8 +5,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const avatarImg = document.getElementById('user-avatar');
   const displayNameEl = document.getElementById('user-display-name');
   const emailEl = document.getElementById('user-email');
+  const phoneEl = document.getElementById('user-phone');
   const roleBadge = document.getElementById('user-role-badge');
+  const authProviderBadge = document.getElementById('auth-provider-badge');
   const adminSwitchBtn = document.getElementById('admin-switch-btn');
+
+  const mfaStatusText = document.getElementById('mfa-status-text');
+  const toggleMfaBtn = document.getElementById('toggle-mfa-btn');
+  const mfaSetupBox = document.getElementById('mfa-setup-box');
+  const mfaQrImg = document.getElementById('mfa-qr-img');
+  const mfaCodeInput = document.getElementById('mfa-code-input');
+  const verifyMfaBtn = document.getElementById('verify-mfa-btn');
+
+  const sessionsContainer = document.getElementById('sessions-container');
 
   const progressText = document.getElementById('progress-text');
   const progressBarFill = document.getElementById('progress-bar-fill');
@@ -24,6 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let currentFilter = 'all';
   let allTasks = [];
+  let currentUser = null;
 
   // 1. Fetch User Profile
   try {
@@ -40,18 +52,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await response.json();
 
     if (data.success && data.user) {
-      const user = data.user;
+      currentUser = data.user;
 
       avatarImg.onerror = () => {
-        avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=818cf8&color=fff`;
+        avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=818cf8&color=fff`;
       };
-      avatarImg.src = user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=818cf8&color=fff`;
+      avatarImg.src = currentUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=818cf8&color=fff`;
 
-      displayNameEl.textContent = user.displayName;
-      emailEl.textContent = user.email;
+      displayNameEl.textContent = currentUser.displayName;
+      emailEl.textContent = currentUser.email;
+      phoneEl.textContent = `Phone: ${currentUser.phoneNumber || 'Not set'}`;
+      authProviderBadge.textContent = (currentUser.authProvider || 'LOCAL').toUpperCase();
 
-      if (user.role === 'admin') {
-        roleBadge.textContent = 'ADMIN';
+      if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
+        roleBadge.textContent = currentUser.role.toUpperCase();
         roleBadge.className = 'badge badge-admin';
         adminSwitchBtn.classList.remove('hidden');
       } else {
@@ -59,10 +73,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         roleBadge.className = 'badge badge-user';
       }
 
+      updateMfaUi();
+
       loadingCard.classList.add('hidden');
       dashboardContent.classList.remove('hidden');
 
-      // Load User Tasks
+      // Load Sessions & Tasks
+      await fetchSessions();
       await fetchTasks();
     } else {
       window.location.href = '/';
@@ -72,7 +89,110 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '/';
   }
 
-  // 2. Fetch Tasks Function
+  // 2FA UI Update
+  function updateMfaUi() {
+    if (currentUser.twoFactorEnabled) {
+      mfaStatusText.textContent = 'Status: Active (Protected)';
+      mfaStatusText.style.color = '#34d399';
+      toggleMfaBtn.textContent = 'Disable 2FA';
+      toggleMfaBtn.className = 'btn-primary btn-admin';
+      mfaSetupBox.classList.add('hidden');
+    } else {
+      mfaStatusText.textContent = 'Status: Disabled (Not protected)';
+      mfaStatusText.style.color = '#fca5a5';
+      toggleMfaBtn.textContent = 'Setup 2FA';
+      toggleMfaBtn.className = 'btn-primary';
+    }
+  }
+
+  // Handle 2FA Toggle & Setup
+  toggleMfaBtn.addEventListener('click', async () => {
+    if (currentUser.twoFactorEnabled) {
+      if (confirm('Are you sure you want to disable two-factor authentication?')) {
+        const res = await fetch('/auth/mfa/disable', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          currentUser.twoFactorEnabled = false;
+          updateMfaUi();
+        }
+      }
+    } else {
+      const res = await fetch('/auth/mfa/setup', { method: 'POST' });
+      const data = await res.json();
+      if (data.success && data.qrCodeUrl) {
+        mfaQrImg.src = data.qrCodeUrl;
+        mfaSetupBox.classList.remove('hidden');
+      }
+    }
+  });
+
+  verifyMfaBtn.addEventListener('click', async () => {
+    const code = mfaCodeInput.value.trim();
+    if (!code || code.length !== 6) return alert('Enter 6-digit code');
+
+    const res = await fetch('/auth/mfa/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentUser.twoFactorEnabled = true;
+      updateMfaUi();
+      alert('2FA successfully enabled!');
+    } else {
+      alert(data.message || 'Invalid code');
+    }
+  });
+
+  // Fetch Active Device Sessions
+  async function fetchSessions() {
+    try {
+      const res = await fetch('/auth/sessions');
+      const data = await res.json();
+      if (data.success) {
+        renderSessions(data.sessions || []);
+      }
+    } catch (err) {
+      console.error('Error fetching sessions:', err);
+    }
+  }
+
+  function renderSessions(sessions) {
+    if (sessions.length === 0) {
+      sessionsContainer.innerHTML = '<div class="empty-state">No active sessions found.</div>';
+      return;
+    }
+
+    sessionsContainer.innerHTML = '';
+    sessions.forEach(sess => {
+      const div = document.createElement('div');
+      div.className = 'task-item';
+      div.innerHTML = `
+        <div class="task-info">
+          <div class="task-title" style="font-size:0.9rem;">${escapeHtml(sess.deviceInfo.userAgent || 'Web Browser')}</div>
+          <div class="task-desc">IP: ${sess.deviceInfo.ipAddress} • Connected ${new Date(sess.createdAt).toLocaleDateString()}</div>
+        </div>
+        <button class="btn-sm btn-danger-sm revoke-session-btn" data-id="${sess._id}">Revoke Device</button>
+      `;
+      sessionsContainer.appendChild(div);
+    });
+
+    document.querySelectorAll('.revoke-session-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const sessionId = e.target.getAttribute('data-id');
+        const res = await fetch('/auth/sessions/revoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+        const data = await res.json();
+        if (data.success) fetchSessions();
+      });
+    });
+  }
+
+  // Tasks Handling
   async function fetchTasks() {
     try {
       const res = await fetch('/api/tasks');
@@ -88,7 +208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Update Progress Bar
   function updateProgressBar(stats) {
     if (!stats) return;
     const total = stats.total || 0;
@@ -99,7 +218,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     progressBarFill.style.width = `${percent}%`;
   }
 
-  // Render Tasks according to active filter
   function renderTasks() {
     let filtered = allTasks;
     if (currentFilter === 'pending') {
@@ -117,7 +235,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     filtered.forEach(task => {
       const taskEl = document.createElement('div');
       taskEl.className = `task-item ${task.completed ? 'completed' : ''}`;
-
       const priorityBadgeClass = task.priority === 'high' ? 'priority-high' : task.priority === 'low' ? 'priority-low' : 'priority-medium';
 
       taskEl.innerHTML = `
@@ -144,12 +261,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       tasksContainer.appendChild(taskEl);
     });
 
-    // Attach Event Listeners to Checkboxes and Delete Buttons
     document.querySelectorAll('.task-checkbox').forEach(chk => {
       chk.addEventListener('change', async (e) => {
         const id = e.target.getAttribute('data-id');
-        const isChecked = e.target.checked;
-        await toggleTaskCompleted(id, isChecked);
+        await toggleTaskCompleted(id, e.target.checked);
       });
     });
 
@@ -161,7 +276,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 3. Create Task Handler
   if (createTaskForm) {
     createTaskForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -191,7 +305,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 4. Toggle Task Completion
   async function toggleTaskCompleted(id, completed) {
     try {
       const res = await fetch(`/api/tasks/${id}`, {
@@ -199,33 +312,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completed }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        await fetchTasks();
-      }
+      if (data.success) await fetchTasks();
     } catch (err) {
       console.error('Error updating task:', err);
     }
   }
 
-  // 5. Delete Task
   async function deleteTask(id) {
     try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: 'DELETE',
-      });
-
+      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
       const data = await res.json();
-      if (data.success) {
-        await fetchTasks();
-      }
+      if (data.success) await fetchTasks();
     } catch (err) {
       console.error('Error deleting task:', err);
     }
   }
 
-  // 6. Filter Listeners
   filterAllBtn.addEventListener('click', () => setFilter('all', filterAllBtn));
   filterPendingBtn.addEventListener('click', () => setFilter('pending', filterPendingBtn));
   filterCompletedBtn.addEventListener('click', () => setFilter('completed', filterCompletedBtn));
@@ -249,3 +352,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/"/g, '&quot;');
   }
 });
+

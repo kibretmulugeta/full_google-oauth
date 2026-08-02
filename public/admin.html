@@ -101,6 +101,33 @@
         </div>
       </div>
 
+      <!-- Security Audit Logs Section -->
+      <div style="margin-bottom: 36px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2>Security Audit Logs</h2>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Real-time security event tracking</span>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>User / Email</th>
+                <th>IP Address</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body">
+              <tr>
+                <td colspan="5" class="empty-state">Loading security audit logs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Global Task Monitor Section -->
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -129,7 +156,7 @@
       </div>
 
       <footer>
-        Admin Control Center &bull; Connected via MongoDB Atlas
+        Admin Control Center &bull; Connected via Universal Auth Service & MongoDB Atlas
       </footer>
     </div>
   </main>
@@ -137,3 +164,4 @@
   <script src="/js/admin.js"></script>
 </body>
 </html>
+
