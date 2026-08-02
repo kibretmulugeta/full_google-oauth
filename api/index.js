@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const express = require('express');
@@ -22,7 +23,7 @@ app.use(async (req, res, next) => {
   try {
     await connectDB();
   } catch (err) {
-    console.error('Database connection error in request middleware:', err);
+    console.error('Database connection warning in request middleware:', err.message);
   }
   next();
 });
@@ -39,7 +40,13 @@ app.use(cookieParser());
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5000';
 app.use(
   cors({
-    origin: clientUrl,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or same-origin)
+      if (!origin || origin === clientUrl || process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive CORS for OAuth callback flexibility
+    },
     credentials: true,
   })
 );
@@ -47,7 +54,27 @@ app.use(
 // Initialize Passport
 app.use(passport.initialize());
 
+// Helper function to resolve static public path across Vercel Lambda and local Node.js
+function getPublicFile(filename) {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'public', filename),
+    path.join(__dirname, '../public', filename),
+    path.join(__dirname, 'public', filename),
+    path.resolve(__dirname, '..', 'public', filename)
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return null;
+}
+
 // 4. Static Files Middleware
+const publicDir = path.resolve(process.cwd(), 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
 app.use(express.static(path.join(__dirname, '../public')));
 
 // 5. Auth & API Routes
@@ -56,26 +83,43 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/admin', adminRoutes);
 
 // 6. Frontend Route Handlers
+const serveHtml = (filename, res) => {
+  const filePath = getPublicFile(filename);
+  if (filePath) {
+    return res.sendFile(filePath);
+  }
+  return res.status(404).send(`<h1>404 - ${filename} Not Found</h1><p>Ensure public/${filename} is included in deployment.</p>`);
+};
+
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  serveHtml('index.html', res);
 });
 
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/dashboard.html'));
+  serveHtml('dashboard.html', res);
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/admin.html'));
+  serveHtml('admin.html', res);
 });
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || 'development',
+    hasMongoUri: Boolean(process.env.MONGO_URI),
+    hasGoogleCredentials: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
+  });
 });
 
-// Catch-all route to serve login page for unknown routes
+// Catch-all route to serve index.html for unknown SPA routes
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, '../public/index.html'));
+  if (req.accepts('html')) {
+    return serveHtml('index.html', res);
+  }
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 // Export Express App for Vercel Serverless Function compatibility
