@@ -7,27 +7,53 @@ const router = express.Router();
 // Apply authMiddleware to all task endpoints
 router.use(authMiddleware);
 
+// Helper function to calculate return/due status
+function computeReturnStatus(task) {
+  if (task.completed) return 'completed';
+  if (task.returnStatus === 'returned') return 'returned';
+  if (!task.dueDate) return 'pending';
+
+  const now = new Date();
+  const due = new Date(task.dueDate);
+  const diffHours = (due - now) / (1000 * 60 * 60);
+
+  if (diffHours < 0) return 'overdue';
+  if (diffHours <= 72) return 'due_soon';
+  return 'pending';
+}
+
 /**
  * @route   GET /api/tasks
- * @desc    Get all tasks for authenticated user
+ * @desc    Get all tasks/reminders for authenticated user
  * @access  Private
  */
 router.get('/', async (req, res) => {
   try {
-    const { completed, priority } = req.query;
+    const { completed, taskType, priority } = req.query;
     const filter = { userId: req.user.id };
 
     if (completed !== undefined) {
       filter.completed = completed === 'true';
     }
+    if (taskType) {
+      filter.taskType = taskType;
+    }
     if (priority) {
       filter.priority = priority;
     }
 
-    const tasks = await Task.find(filter).sort({ createdAt: -1 });
+    let tasks = await Task.find(filter).sort({ createdAt: -1 });
+
+    // Dynamic return status computation
+    tasks = tasks.map((t) => {
+      const obj = t.toObject();
+      obj.computedStatus = computeReturnStatus(t);
+      return obj;
+    });
 
     const totalCount = await Task.countDocuments({ userId: req.user.id });
     const completedCount = await Task.countDocuments({ userId: req.user.id, completed: true });
+    const overdueCount = tasks.filter((t) => t.computedStatus === 'overdue').length;
 
     res.json({
       success: true,
@@ -36,6 +62,7 @@ router.get('/', async (req, res) => {
         total: totalCount,
         completed: completedCount,
         pending: totalCount - completedCount,
+        overdue: overdueCount,
       },
     });
   } catch (error) {
@@ -49,32 +76,58 @@ router.get('/', async (req, res) => {
 
 /**
  * @route   POST /api/tasks
- * @desc    Create a new task for authenticated user
+ * @desc    Create a new task / book rental reminder / reading alert
  * @access  Private
  */
 router.post('/', async (req, res) => {
   try {
-    const { title, description, priority, dueDate } = req.body;
+    const {
+      taskType,
+      title,
+      description,
+      bookTitle,
+      author,
+      borrowerName,
+      pagesPerDay,
+      startPage,
+      endPage,
+      priority,
+      dueDate,
+    } = req.body;
 
     if (!title || !title.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Task title is required',
+        message: 'Title is required',
       });
     }
 
+    const type = ['borrow_book', 'return_book', 'reading_alert', 'general'].includes(taskType)
+      ? taskType
+      : 'general';
+
     const newTask = await Task.create({
       userId: req.user.id,
+      taskType: type,
       title: title.trim(),
       description: description ? description.trim() : '',
+      bookTitle: bookTitle ? bookTitle.trim() : '',
+      author: author ? author.trim() : '',
+      borrowerName: borrowerName ? borrowerName.trim() : '',
+      pagesPerDay: Number(pagesPerDay) || 0,
+      startPage: Number(startPage) || 0,
+      endPage: Number(endPage) || 0,
       priority: priority && ['low', 'medium', 'high'].includes(priority) ? priority : 'medium',
       dueDate: dueDate ? new Date(dueDate) : null,
     });
 
+    const taskObj = newTask.toObject();
+    taskObj.computedStatus = computeReturnStatus(newTask);
+
     res.status(201).json({
       success: true,
-      message: 'Task created successfully',
-      task: newTask,
+      message: 'Reminder created successfully',
+      task: taskObj,
     });
   } catch (error) {
     console.error('Error creating task:', error);
@@ -86,14 +139,55 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * @route   POST /api/tasks/:id/extend
+ * @desc    Extend loan due date by specified days (default 7 days)
+ * @access  Private
+ */
+router.post('/:id/extend', async (req, res) => {
+  try {
+    const taskId = req.params.id;
+    const days = Number(req.query.days) || 7;
+
+    const task = await Task.findOne({ _id: taskId, userId: req.user.id });
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: 'Rental record not found',
+      });
+    }
+
+    const currentDue = task.dueDate ? new Date(task.dueDate) : new Date();
+    currentDue.setDate(currentDue.getDate() + days);
+    task.dueDate = currentDue;
+    task.returnStatus = 'pending';
+    await task.save();
+
+    const taskObj = task.toObject();
+    taskObj.computedStatus = computeReturnStatus(task);
+
+    res.json({
+      success: true,
+      message: `Extended loan by +${days} days`,
+      task: taskObj,
+    });
+  } catch (error) {
+    console.error('Error extending rental:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error extending rental',
+    });
+  }
+});
+
+/**
  * @route   PUT /api/tasks/:id
- * @desc    Update task details or toggle completed status
+ * @desc    Update task details or toggle completed/returned status
  * @access  Private
  */
 router.put('/:id', async (req, res) => {
   try {
     const taskId = req.params.id;
-    const { title, description, completed, priority, dueDate } = req.body;
+    const { title, description, completed, returnStatus, priority, dueDate } = req.body;
 
     let task = await Task.findOne({ _id: taskId, userId: req.user.id });
     if (!task) {
@@ -105,7 +199,11 @@ router.put('/:id', async (req, res) => {
 
     if (title !== undefined) task.title = title.trim();
     if (description !== undefined) task.description = description.trim();
-    if (completed !== undefined) task.completed = Boolean(completed);
+    if (completed !== undefined) {
+      task.completed = Boolean(completed);
+      if (completed) task.returnStatus = 'completed';
+    }
+    if (returnStatus !== undefined) task.returnStatus = returnStatus;
     if (priority !== undefined && ['low', 'medium', 'high'].includes(priority)) {
       task.priority = priority;
     }
@@ -113,10 +211,13 @@ router.put('/:id', async (req, res) => {
 
     await task.save();
 
+    const taskObj = task.toObject();
+    taskObj.computedStatus = computeReturnStatus(task);
+
     res.json({
       success: true,
       message: 'Task updated successfully',
-      task,
+      task: taskObj,
     });
   } catch (error) {
     console.error('Error updating task:', error);

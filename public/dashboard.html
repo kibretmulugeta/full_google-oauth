@@ -3,109 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Dashboard & Task Manager</title>
-  <meta name="description" content="User task management dashboard with universal authentication, 2FA, and active session management.">
+  <title>User Dashboard - Universal Auth & Book Task Reminders</title>
+  <meta name="description" content="Manage user sessions, security preferences, book borrowing reminders, return alerts, and reading goals.">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <!-- Header Navbar -->
-  <header class="navbar">
-    <a href="/dashboard" class="nav-brand">
-      <svg viewBox="0 0 24 24">
-        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-      </svg>
-      <span>Universal Task Portal</span>
-    </a>
-    <div class="nav-actions">
-      <a id="admin-switch-btn" href="/admin" class="btn-nav btn-admin-nav hidden">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-        </svg>
-        <span>Admin Portal</span>
-      </a>
-      <a href="/" class="btn-nav">+ Switch / Add Account</a>
-      <a href="/auth/logout" class="btn-nav btn-logout">
-        <span>Sign Out</span>
-      </a>
+  <!-- Loading Card -->
+  <div id="loading-card" class="container">
+    <div class="card" style="text-align: center; padding: 48px;">
+      <div class="spinner"></div>
+      <p style="margin-top: 16px; color: var(--text-secondary);">Loading your profile & task reminders...</p>
     </div>
-  </header>
+  </div>
 
-  <main class="container-wide">
-    <!-- Skeleton Loading -->
-    <div id="loading-card" class="card">
-      <div class="skeleton" style="height: 60px; width: 100%; margin-bottom: 20px;"></div>
-      <div class="skeleton" style="height: 120px; width: 100%; margin-bottom: 20px;"></div>
-      <div class="skeleton" style="height: 200px; width: 100%;"></div>
-    </div>
-
-    <!-- Active User Content -->
-    <div id="dashboard-content" class="card card-dashboard hidden">
-      <!-- Profile Header -->
-      <div class="profile-header">
-        <div class="avatar-wrapper">
-          <img id="user-avatar" class="avatar-img" src="" alt="Avatar" referrerpolicy="no-referrer" />
-        </div>
-        <div class="profile-meta">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <h2 id="user-display-name">Loading...</h2>
-            <span id="user-role-badge" class="badge badge-user">USER</span>
-            <span id="auth-provider-badge" class="badge" style="background:rgba(255,255,255,0.08);">LOCAL</span>
-          </div>
-          <p id="user-email">email@example.com</p>
-          <p id="user-phone" style="font-size:0.85rem; color:var(--text-muted);">Phone: Not set</p>
-        </div>
-      </div>
-
-      <!-- Security & 2FA Setup Card -->
-      <div class="progress-card" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+  <!-- Dashboard Content -->
+  <main id="dashboard-content" class="container hidden">
+    <div class="card" style="max-width: 900px;">
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <img id="user-avatar" src="" alt="Avatar" style="width: 56px; h-56px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;" />
           <div>
-            <h3 style="font-size:1.1rem; color:var(--text-primary);">Two-Factor Authentication (2FA)</h3>
-            <p id="mfa-status-text" class="subtitle" style="margin-bottom:0; font-size:0.85rem;">Status: Disabled</p>
-          </div>
-          <button id="toggle-mfa-btn" class="btn-primary" style="width:auto; padding:8px 16px; font-size:0.85rem;" type="button">Setup 2FA</button>
-        </div>
-
-        <div id="mfa-setup-box" class="hidden" style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08);">
-          <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:12px;">Scan QR Code using Google Authenticator or Authy, then enter the 6-digit passcode:</p>
-          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-            <img id="mfa-qr-img" src="" alt="2FA QR Code" style="width:120px; height:120px; border-radius:12px; border:2px solid var(--accent-purple);" />
-            <div style="flex:1; min-width:200px;">
-              <input type="text" id="mfa-code-input" class="form-input" placeholder="6-digit code" maxlength="6" style="margin-bottom:10px;" />
-              <button id="verify-mfa-btn" class="btn-primary" style="width:100%; padding:10px;" type="button">Verify & Enable 2FA</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h1 id="user-display-name" style="margin: 0; font-size: 1.5rem;">User Name</h1>
+              <span id="user-role-badge" class="badge">USER</span>
+              <span id="auth-provider-badge" class="badge" style="background: rgba(255, 255, 255, 0.1); color: #cbd5e1;">LOCAL</span>
             </div>
+            <p id="user-email" style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.875rem;">user@example.com</p>
+            <p id="user-phone" style="margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.75rem;">Phone: Not set</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a href="/admin" id="admin-switch-btn" class="btn-primary btn-admin hidden" style="text-decoration: none;">Admin Panel</a>
+          <a href="/auth/logout" class="btn-primary" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); text-decoration: none;">Sign Out</a>
+        </div>
+      </div>
+
+      <!-- Security & 2FA Section -->
+      <div style="background: var(--surface-hover); border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid var(--border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="margin: 0; font-size: 1rem; color: var(--text-primary);">Two-Factor Authentication (2FA)</h3>
+            <p id="mfa-status-text" style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">Status: Disabled</p>
+          </div>
+          <button id="toggle-mfa-btn" class="btn-primary" style="width: auto; padding: 6px 16px; font-size: 0.8rem;" type="button">Enable 2FA</button>
+        </div>
+
+        <!-- 2FA Setup QR Box -->
+        <div id="mfa-setup-box" class="hidden" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center;">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Scan this QR code with Google Authenticator or Authy:</p>
+          <img id="mfa-qr-img" src="" alt="2FA QR Code" style="width: 160px; height: 160px; border-radius: 8px; background: white; padding: 8px; margin: 0 auto 12px auto;" />
+          <div style="display: flex; justify-content: center; gap: 8px; max-width: 320px; margin: 0 auto;">
+            <input type="text" id="mfa-code-input" class="form-input" placeholder="6-digit passcode" maxlength="6" style="text-align: center;" />
+            <button id="verify-mfa-btn" class="btn-primary" style="width: auto;" type="button">Verify</button>
           </div>
         </div>
       </div>
 
-      <!-- Active Device Sessions Card -->
-      <div class="progress-card" style="margin-bottom: 24px;">
-        <h3 style="font-size:1.1rem; color:var(--text-primary); margin-bottom:12px;">Active Device Sessions</h3>
-        <div id="sessions-container" class="task-list">
-          <div class="empty-state">Loading active sessions...</div>
-        </div>
-      </div>
-
-      <!-- Task Progress -->
-      <div class="progress-card">
-        <div class="progress-header">
-          <span>Task Progress</span>
-          <span id="progress-text">0 of 0 Completed</span>
-        </div>
-        <div class="progress-track">
-          <div id="progress-bar-fill" class="progress-fill" style="width: 0%;"></div>
-        </div>
-      </div>
-
-      <!-- Task Creation Form -->
+      <!-- Active Sessions Section -->
       <div style="margin-bottom: 28px;">
-        <h2>Create New Task</h2>
+        <h2>Active User Sessions</h2>
+        <div id="sessions-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Progress Bar Card -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+          <span style="color: var(--text-secondary);">Task Completion Progress</span>
+          <span id="progress-text" style="color: var(--accent); font-weight: 600;">0% (0/0)</span>
+        </div>
+        <div style="background: var(--surface-hover); height: 8px; border-radius: 4px; overflow: hidden;">
+          <div id="progress-bar-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #6366f1, #818cf8); transition: width 0.3s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Book Rental & Task Reminder Creation Form -->
+      <div style="margin-bottom: 28px; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
+        <h2 style="margin-top: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+          📖 Create Book Rental & Task Reminder
+        </h2>
         <form id="create-task-form">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
             <div>
-              <input type="text" id="task-title-input" class="form-input" placeholder="Task Title *" required />
+              <label class="form-label" style="font-size: 0.75rem;">Reminder Mode *</label>
+              <select id="task-type-input" class="form-select" style="font-weight: 600;">
+                <option value="borrow_book">📚 Book Borrowing Reminder</option>
+                <option value="return_book">⏰ Book Return & Overdue Alert</option>
+                <option value="reading_alert">📖 Daily Reading Page Alert</option>
+                <option value="general">📝 General Task</option>
+              </select>
             </div>
             <div>
+              <label class="form-label" style="font-size: 0.75rem;">Reminder Title *</label>
+              <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Return Clean Code to Library" required />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Priority</label>
               <select id="task-priority-input" class="form-select">
                 <option value="low">Priority: Low</option>
                 <option value="medium" selected>Priority: Medium</option>
@@ -113,31 +109,74 @@
               </select>
             </div>
           </div>
-          <div style="margin-bottom: 12px;">
-            <input type="text" id="task-desc-input" class="form-input" placeholder="Task Description (Optional)" />
+
+          <!-- Dynamic Book Rental Fields -->
+          <div id="book-fields-box" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Book Title</label>
+              <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Clean Code" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Author / Library Location</label>
+              <input type="text" id="task-author" class="form-input" placeholder="e.g. Robert C. Martin / Shelf A-3" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Borrower / Contact Name</label>
+              <input type="text" id="task-borrower" class="form-input" placeholder="e.g. John Doe" />
+            </div>
           </div>
-          <button type="submit" class="btn-primary" style="width: auto; padding: 10px 24px;">+ Add Task</button>
+
+          <!-- Dynamic Reading Alert Fields -->
+          <div id="reading-fields-box" class="hidden" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Pages Target / Day</label>
+              <input type="number" id="task-pages-per-day" class="form-input" placeholder="e.g. 25 pages" value="25" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Start Page</label>
+              <input type="number" id="task-start-page" class="form-input" placeholder="1" value="1" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">End Page</label>
+              <input type="number" id="task-end-page" class="form-input" placeholder="50" value="50" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Scheduled / Return Due Date</label>
+              <input type="datetime-local" id="task-due-date" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.75rem;">Notes / Description</label>
+              <input type="text" id="task-desc-input" class="form-input" placeholder="Optional notes or details..." />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: auto; padding: 10px 24px;">+ Save Reminder</button>
         </form>
       </div>
 
       <!-- Filter Controls & Task List -->
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-          <h2>Your Tasks</h2>
-          <div style="display: flex; gap: 8px;">
+          <h2>Your Reminders & Book Rentals</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button id="filter-all" class="btn-sm active" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.4);" type="button">All</button>
-            <button id="filter-pending" class="btn-sm" type="button">Pending</button>
+            <button id="filter-borrow" class="btn-sm" type="button">📚 Borrows</button>
+            <button id="filter-return" class="btn-sm" type="button">⏰ Return Alerts</button>
+            <button id="filter-reading" class="btn-sm" type="button">📖 Reading Goals</button>
             <button id="filter-completed" class="btn-sm" type="button">Completed</button>
           </div>
         </div>
 
         <div id="tasks-container" class="task-list">
-          <div class="empty-state">Loading tasks...</div>
+          <div class="empty-state">Loading tasks & reminders...</div>
         </div>
       </div>
 
       <footer>
-        Universal Authentication Service & Database Synchronization Enabled
+        Universal Authentication & Book Task Reminder Platform
       </footer>
     </div>
   </main>
@@ -145,4 +184,3 @@
   <script src="/js/dashboard.js"></script>
 </body>
 </html>
-

@@ -6,6 +6,11 @@ const taskSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  taskType: {
+    type: String,
+    enum: ['borrow_book', 'return_book', 'reading_alert', 'general'],
+    default: 'general',
+  },
   title: {
     type: String,
     required: true,
@@ -16,9 +21,41 @@ const taskSchema = new mongoose.Schema({
     trim: true,
     default: '',
   },
+  bookTitle: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  author: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  borrowerName: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  pagesPerDay: {
+    type: Number,
+    default: 0,
+  },
+  startPage: {
+    type: Number,
+    default: 0,
+  },
+  endPage: {
+    type: Number,
+    default: 0,
+  },
   completed: {
     type: Boolean,
     default: false,
+  },
+  returnStatus: {
+    type: String,
+    enum: ['pending', 'due_soon', 'overdue', 'returned', 'completed'],
+    default: 'pending',
   },
   priority: {
     type: String,
