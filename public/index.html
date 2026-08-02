@@ -159,24 +159,42 @@
         </form>
       </div>
 
-      <!-- Forgot Password Modal -->
+      <!-- Forgot & Reset Password Modal -->
       <div id="forgot-modal" class="modal hidden">
         <div class="modal-content">
-          <h3>Reset Password</h3>
-          <p class="subtitle">Enter your email address to generate a password reset token.</p>
+          <h3 id="modal-title">Reset Password</h3>
+          <p id="modal-subtitle" class="subtitle">Enter your email address to receive a password reset token.</p>
+
+          <!-- Step 1: Request Token -->
           <form id="forgot-password-form">
             <div class="form-group">
               <label for="forgot-email" class="form-label">Email Address</label>
               <input type="email" id="forgot-email" class="form-input" placeholder="you@domain.com" required />
             </div>
-            <div id="reset-token-display" class="alert-info hidden"></div>
             <div class="modal-actions">
-              <button type="button" id="close-forgot-modal" class="btn-secondary">Cancel</button>
-              <button type="submit" class="btn-primary">Request Reset</button>
+              <button type="button" class="close-forgot-modal btn-secondary">Cancel</button>
+              <button type="submit" class="btn-primary">Generate Reset Token</button>
+            </div>
+          </form>
+
+          <!-- Step 2: Enter Token & New Password -->
+          <form id="reset-password-form" class="hidden">
+            <div class="form-group">
+              <label for="reset-token-input" class="form-label">Reset Token</label>
+              <input type="text" id="reset-token-input" class="form-input" placeholder="Paste reset token" required />
+            </div>
+            <div class="form-group">
+              <label for="new-password-input" class="form-label">New Password</label>
+              <input type="password" id="new-password-input" class="form-input" placeholder="••••••••" minlength="6" required />
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="close-forgot-modal btn-secondary">Cancel</button>
+              <button type="submit" class="btn-primary">Update Password</button>
             </div>
           </form>
         </div>
       </div>
+
 
       <footer>
         &copy; 2026 Permanent Universal Authentication System

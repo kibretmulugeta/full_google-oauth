@@ -204,20 +204,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Handle Forgot Password Modal
+  // Handle Forgot & Reset Password Modal
+  const modalTitle = document.getElementById('modal-title');
+  const modalSubtitle = document.getElementById('modal-subtitle');
+  const resetPasswordForm = document.getElementById('reset-password-form');
+  const closeForgotModalBtns = document.querySelectorAll('.close-forgot-modal');
+
   forgotPasswordLink.addEventListener('click', (e) => {
     e.preventDefault();
     forgotModal.classList.remove('hidden');
-    resetTokenDisplay.classList.add('hidden');
+    forgotPasswordForm.classList.remove('hidden');
+    resetPasswordForm.classList.add('hidden');
+    modalTitle.textContent = 'Reset Password';
+    modalSubtitle.textContent = 'Enter your email address to generate a password reset token.';
   });
 
-  closeForgotModal.addEventListener('click', () => {
-    forgotModal.classList.add('hidden');
+  closeForgotModalBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      forgotModal.classList.add('hidden');
+    });
   });
 
+  // Step 1: Submit email to get reset token
   forgotPasswordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('forgot-email').value;
+    const email = document.getElementById('forgot-email').value.trim();
 
     try {
       const res = await fetch('/auth/forgot-password', {
@@ -228,16 +239,50 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (data.resetToken) {
-        resetTokenDisplay.innerHTML = `<strong>Dev Token Generated:</strong><br><code>${data.resetToken}</code><br><span style="font-size:0.75rem">Use POST /auth/reset-password with this token to update password.</span>`;
-        resetTokenDisplay.classList.remove('hidden');
+        // Auto-fill token in step 2 form for seamless UX
+        document.getElementById('reset-token-input').value = data.resetToken;
+        forgotPasswordForm.classList.add('hidden');
+        resetPasswordForm.classList.remove('hidden');
+        modalTitle.textContent = 'Set New Password';
+        modalSubtitle.textContent = 'Enter your new password below to update your account.';
       } else {
-        alert(data.message);
+        alert(data.message || 'If an account exists, a reset link has been processed.');
         forgotModal.classList.add('hidden');
       }
     } catch (err) {
-      alert('Error requesting password reset');
+      alert('Error requesting password reset token.');
     }
   });
+
+  // Step 2: Submit reset token & new password
+  resetPasswordForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const resetToken = document.getElementById('reset-token-input').value.trim();
+    const newPassword = document.getElementById('new-password-input').value;
+    const email = document.getElementById('forgot-email').value.trim();
+
+    try {
+      const res = await fetch('/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resetToken, newPassword }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showSuccess('Password reset successfully! You can now log in with your new password.');
+        forgotModal.classList.add('hidden');
+        switchTab('login');
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = newPassword;
+      } else {
+        alert(data.message || 'Password reset failed.');
+      }
+    } catch (err) {
+      alert('Error resetting password.');
+    }
+  });
+
 
   // Multi-Account Storage & Switcher Logic
   function saveAccountToStorage(user) {
