@@ -76,7 +76,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @route   POST /api/tasks
- * @desc    Create a new task / book rental reminder / reading alert
+ * @desc    Create a new appointment / meeting / schedule event / reminder
  * @access  Private
  */
 router.post('/', async (req, res) => {
@@ -85,6 +85,10 @@ router.post('/', async (req, res) => {
       taskType,
       title,
       description,
+      location,
+      clientName,
+      durationMinutes,
+      scheduleTopic,
       bookTitle,
       author,
       borrowerName,
@@ -102,15 +106,18 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const type = ['borrow_book', 'return_book', 'reading_alert', 'general'].includes(taskType)
-      ? taskType
-      : 'general';
+    const validTypes = ['appointment', 'meeting', 'event', 'deadline', 'borrow_book', 'return_book', 'reading_alert', 'general'];
+    const type = validTypes.includes(taskType) ? taskType : 'appointment';
 
     const newTask = await Task.create({
       userId: req.user.id,
       taskType: type,
       title: title.trim(),
       description: description ? description.trim() : '',
+      location: location ? location.trim() : '',
+      clientName: clientName ? clientName.trim() : '',
+      durationMinutes: Number(durationMinutes) || 30,
+      scheduleTopic: scheduleTopic ? scheduleTopic.trim() : '',
       bookTitle: bookTitle ? bookTitle.trim() : '',
       author: author ? author.trim() : '',
       borrowerName: borrowerName ? borrowerName.trim() : '',
@@ -126,7 +133,7 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Reminder created successfully',
+      message: 'Schedule event created successfully',
       task: taskObj,
     });
   } catch (error) {
@@ -140,7 +147,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @route   POST /api/tasks/:id/extend
- * @desc    Extend loan due date by specified days (default 7 days)
+ * @desc    Reschedule appointment / extend due date by specified days (default 7 days)
  * @access  Private
  */
 router.post('/:id/extend', async (req, res) => {
@@ -152,7 +159,7 @@ router.post('/:id/extend', async (req, res) => {
     if (!task) {
       return res.status(404).json({
         success: false,
-        message: 'Rental record not found',
+        message: 'Schedule record not found',
       });
     }
 
@@ -167,14 +174,14 @@ router.post('/:id/extend', async (req, res) => {
 
     res.json({
       success: true,
-      message: `Extended loan by +${days} days`,
+      message: `Rescheduled appointment by +${days} days`,
       task: taskObj,
     });
   } catch (error) {
-    console.error('Error extending rental:', error);
+    console.error('Error rescheduling appointment:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error extending rental',
+      message: 'Server error rescheduling appointment',
     });
   }
 });

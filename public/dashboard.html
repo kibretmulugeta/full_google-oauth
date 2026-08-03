@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Dashboard - Universal Auth & Book Task Reminders</title>
-  <meta name="description" content="Manage user sessions, security preferences, book borrowing reminders, return alerts, and reading goals.">
+  <title>User Dashboard - Universal Auth & Appointment Scheduler</title>
+  <meta name="description" content="Manage user sessions, security preferences, appointments, meeting schedules, and event reminders.">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <div id="loading-card" class="container">
     <div class="card" style="text-align: center; padding: 48px;">
       <div class="spinner"></div>
-      <p style="margin-top: 16px; color: var(--text-secondary);">Loading your profile & task reminders...</p>
+      <p style="margin-top: 16px; color: var(--text-secondary);">Loading your profile & appointment schedules...</p>
     </div>
   </div>
 
@@ -22,7 +22,7 @@
       <!-- Header -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 16px;">
-          <img id="user-avatar" src="" alt="Avatar" style="width: 56px; h-56px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;" />
+          <img id="user-avatar" src="" alt="Avatar" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;" />
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <h1 id="user-display-name" style="margin: 0; font-size: 1.5rem;">User Name</h1>
@@ -72,7 +72,7 @@
       <!-- Progress Bar Card -->
       <div style="margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
-          <span style="color: var(--text-secondary);">Task Completion Progress</span>
+          <span style="color: var(--text-secondary);">Schedule & Task Completion Progress</span>
           <span id="progress-text" style="color: var(--accent); font-weight: 600;">0% (0/0)</span>
         </div>
         <div style="background: var(--surface-hover); height: 8px; border-radius: 4px; overflow: hidden;">
@@ -80,25 +80,25 @@
         </div>
       </div>
 
-      <!-- Book Rental & Task Reminder Creation Form -->
+      <!-- Appointment & Schedule Creation Form -->
       <div style="margin-bottom: 28px; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
         <h2 style="margin-top: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
-          📖 Create Book Rental & Task Reminder
+          📅 Create Appointment & Schedule Event
         </h2>
         <form id="create-task-form">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Reminder Mode *</label>
+              <label class="form-label" style="font-size: 0.75rem;">Schedule Category *</label>
               <select id="task-type-input" class="form-select" style="font-weight: 600;">
-                <option value="borrow_book">📚 Book Borrowing Reminder</option>
-                <option value="return_book">⏰ Book Return & Overdue Alert</option>
-                <option value="reading_alert">📖 Daily Reading Page Alert</option>
+                <option value="appointment">📅 Appointment / Booking</option>
+                <option value="meeting">🤝 Client / Team Meeting</option>
+                <option value="event">🎉 Event & Reminder</option>
                 <option value="general">📝 General Task</option>
               </select>
             </div>
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Reminder Title *</label>
-              <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Return Clean Code to Library" required />
+              <label class="form-label" style="font-size: 0.75rem;">Schedule Title *</label>
+              <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Dental Checkup / Project Sync" required />
             </div>
             <div>
               <label class="form-label" style="font-size: 0.75rem;">Priority</label>
@@ -110,73 +110,57 @@
             </div>
           </div>
 
-          <!-- Dynamic Book Rental Fields -->
+          <!-- Dynamic Scheduling Fields -->
           <div id="book-fields-box" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Book Title</label>
-              <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Clean Code" />
+              <label class="form-label" style="font-size: 0.75rem;">Location / Video Link</label>
+              <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Google Meet / Room 302" />
             </div>
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Author / Library Location</label>
-              <input type="text" id="task-author" class="form-input" placeholder="e.g. Robert C. Martin / Shelf A-3" />
+              <label class="form-label" style="font-size: 0.75rem;">Client / Attendee Name</label>
+              <input type="text" id="task-author" class="form-input" placeholder="e.g. Jane Smith / Tech Team" />
             </div>
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Borrower / Contact Name</label>
-              <input type="text" id="task-borrower" class="form-input" placeholder="e.g. John Doe" />
-            </div>
-          </div>
-
-          <!-- Dynamic Reading Alert Fields -->
-          <div id="reading-fields-box" class="hidden" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px;">
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Pages Target / Day</label>
-              <input type="number" id="task-pages-per-day" class="form-input" placeholder="e.g. 25 pages" value="25" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Start Page</label>
-              <input type="number" id="task-start-page" class="form-input" placeholder="1" value="1" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">End Page</label>
-              <input type="number" id="task-end-page" class="form-input" placeholder="50" value="50" />
+              <label class="form-label" style="font-size: 0.75rem;">Duration (Minutes)</label>
+              <input type="number" id="task-borrower" class="form-input" placeholder="30" value="30" />
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Scheduled / Return Due Date</label>
+              <label class="form-label" style="font-size: 0.75rem;">Appointment Date & Time *</label>
               <input type="datetime-local" id="task-due-date" class="form-input" />
             </div>
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Notes / Description</label>
-              <input type="text" id="task-desc-input" class="form-input" placeholder="Optional notes or details..." />
+              <label class="form-label" style="font-size: 0.75rem;">Agenda / Notes</label>
+              <input type="text" id="task-desc-input" class="form-input" placeholder="Meeting agenda or notes..." />
             </div>
           </div>
 
-          <button type="submit" class="btn-primary" style="width: auto; padding: 10px 24px;">+ Save Reminder</button>
+          <button type="submit" class="btn-primary" style="width: auto; padding: 10px 24px;">+ Schedule Appointment</button>
         </form>
       </div>
 
       <!-- Filter Controls & Task List -->
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-          <h2>Your Reminders & Book Rentals</h2>
+          <h2>Your Scheduled Appointments & Events</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button id="filter-all" class="btn-sm active" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.4);" type="button">All</button>
-            <button id="filter-borrow" class="btn-sm" type="button">📚 Borrows</button>
-            <button id="filter-return" class="btn-sm" type="button">⏰ Return Alerts</button>
-            <button id="filter-reading" class="btn-sm" type="button">📖 Reading Goals</button>
+            <button id="filter-borrow" class="btn-sm" type="button">📅 Appointments</button>
+            <button id="filter-return" class="btn-sm" type="button">🤝 Meetings</button>
+            <button id="filter-reading" class="btn-sm" type="button">🎉 Events</button>
             <button id="filter-completed" class="btn-sm" type="button">Completed</button>
           </div>
         </div>
 
         <div id="tasks-container" class="task-list">
-          <div class="empty-state">Loading tasks & reminders...</div>
+          <div class="empty-state">Loading appointments & schedules...</div>
         </div>
       </div>
 
       <footer>
-        Universal Authentication & Book Task Reminder Platform
+        Universal Authentication & Appointment Scheduling Platform
       </footer>
     </div>
   </main>

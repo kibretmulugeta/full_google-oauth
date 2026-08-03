@@ -8,8 +8,8 @@ const taskSchema = new mongoose.Schema({
   },
   taskType: {
     type: String,
-    enum: ['borrow_book', 'return_book', 'reading_alert', 'general'],
-    default: 'general',
+    enum: ['appointment', 'meeting', 'event', 'deadline', 'borrow_book', 'return_book', 'reading_alert', 'general'],
+    default: 'appointment',
   },
   title: {
     type: String,
@@ -21,6 +21,27 @@ const taskSchema = new mongoose.Schema({
     trim: true,
     default: '',
   },
+  // Scheduling & Appointment Fields
+  location: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  clientName: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  durationMinutes: {
+    type: Number,
+    default: 30,
+  },
+  scheduleTopic: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  // Legacy / Backwards Compatibility Fields
   bookTitle: {
     type: String,
     trim: true,

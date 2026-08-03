@@ -55,15 +55,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (taskTypeInput) {
     taskTypeInput.addEventListener('change', () => {
       const mode = taskTypeInput.value;
-      if (mode === 'reading_alert') {
+      if (mode === 'appointment' || mode === 'meeting' || mode === 'event' || mode === 'borrow_book' || mode === 'return_book' || mode === 'reading_alert') {
         bookFieldsBox.classList.remove('hidden');
-        readingFieldsBox.classList.remove('hidden');
-      } else if (mode === 'borrow_book' || mode === 'return_book') {
-        bookFieldsBox.classList.remove('hidden');
-        readingFieldsBox.classList.add('hidden');
       } else {
         bookFieldsBox.classList.add('hidden');
-        readingFieldsBox.classList.add('hidden');
       }
     });
   }
@@ -278,17 +273,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderTasks() {
     let filtered = allTasks;
     if (currentFilter === 'borrow') {
-      filtered = allTasks.filter(t => t.taskType === 'borrow_book');
+      filtered = allTasks.filter(t => t.taskType === 'appointment' || t.taskType === 'borrow_book');
     } else if (currentFilter === 'return') {
-      filtered = allTasks.filter(t => t.taskType === 'return_book');
+      filtered = allTasks.filter(t => t.taskType === 'meeting' || t.taskType === 'return_book');
     } else if (currentFilter === 'reading') {
-      filtered = allTasks.filter(t => t.taskType === 'reading_alert');
+      filtered = allTasks.filter(t => t.taskType === 'event' || t.taskType === 'reading_alert');
     } else if (currentFilter === 'completed') {
       filtered = allTasks.filter(t => t.completed);
     }
 
     if (filtered.length === 0) {
-      tasksContainer.innerHTML = `<div class="empty-state">No reminders found in this section. Create one above!</div>`;
+      tasksContainer.innerHTML = `<div class="empty-state">No scheduled appointments found in this section. Create one above!</div>`;
       return;
     }
 
@@ -304,16 +299,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusBadgeHtml = '<span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);">🚨 Overdue Alert</span>';
       } else if (computedStatus === 'due_soon') {
         statusBadgeHtml = '<span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">⚠️ Due Soon</span>';
-      } else if (task.taskType === 'borrow_book') {
-        statusBadgeHtml = '<span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">📚 Borrowing</span>';
-      } else if (task.taskType === 'return_book') {
-        statusBadgeHtml = '<span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">⏰ Return Due</span>';
-      } else if (task.taskType === 'reading_alert') {
-        statusBadgeHtml = '<span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">📖 Reading Goal</span>';
+      } else if (task.taskType === 'appointment' || task.taskType === 'borrow_book') {
+        statusBadgeHtml = '<span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">📅 Appointment</span>';
+      } else if (task.taskType === 'meeting' || task.taskType === 'return_book') {
+        statusBadgeHtml = '<span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">🤝 Meeting</span>';
+      } else if (task.taskType === 'event' || task.taskType === 'reading_alert') {
+        statusBadgeHtml = '<span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">🎉 Event</span>';
+      } else {
+        statusBadgeHtml = '<span class="badge" style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1;">📝 Schedule</span>';
       }
 
       const priorityBadgeClass = task.priority === 'high' ? 'priority-high' : task.priority === 'low' ? 'priority-low' : 'priority-medium';
       const dueFormatted = task.dueDate ? new Date(task.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+
+      const locationText = task.location || task.bookTitle;
+      const clientText = task.clientName || task.author;
+      const durationText = task.durationMinutes ? `${task.durationMinutes} mins` : (task.borrowerName ? task.borrowerName : null);
 
       taskEl.innerHTML = `
         <div class="task-left" style="flex: 1;">
@@ -326,11 +327,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
 
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 12px;">
-              ${task.bookTitle ? `<span>📖 Book: <strong style="color: #cbd5e1;">${escapeHtml(task.bookTitle)}</strong></span>` : ''}
-              ${task.author ? `<span>✍️ Author/Location: ${escapeHtml(task.author)}</span>` : ''}
-              ${task.borrowerName ? `<span>👤 Borrower: ${escapeHtml(task.borrowerName)}</span>` : ''}
-              ${task.taskType === 'reading_alert' && task.pagesPerDay ? `<span>🎯 Goal: ${task.pagesPerDay} pages/day (Pages ${task.startPage}-${task.endPage})</span>` : ''}
-              ${dueFormatted ? `<span style="${computedStatus === 'overdue' ? 'color: #f87171; font-weight: bold;' : ''}">📅 Due: ${dueFormatted}</span>` : ''}
+              ${locationText ? `<span>📍 Location/Link: <strong style="color: #cbd5e1;">${escapeHtml(locationText)}</strong></span>` : ''}
+              ${clientText ? `<span>👤 Client/Attendee: ${escapeHtml(clientText)}</span>` : ''}
+              ${durationText ? `<span>⏱️ Duration: ${escapeHtml(durationText)}</span>` : ''}
+              ${dueFormatted ? `<span style="${computedStatus === 'overdue' ? 'color: #f87171; font-weight: bold;' : ''}">📅 Date/Time: ${dueFormatted}</span>` : ''}
             </div>
 
             ${task.description ? `<span class="task-desc" style="margin-top: 4px; display: block;">${escapeHtml(task.description)}</span>` : ''}
@@ -338,10 +338,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
 
         <div class="task-right" style="display: flex; align-items: center; gap: 6px;">
-          ${(task.taskType === 'return_book' || task.dueDate) && !task.completed ? `
-            <button class="btn-sm extend-rental-btn" data-id="${task._id}" style="font-size: 0.7rem; padding: 4px 8px;" title="Extend loan due date by +7 days">+7 Days</button>
+          ${(task.dueDate) && !task.completed ? `
+            <button class="btn-sm extend-rental-btn" data-id="${task._id}" style="font-size: 0.7rem; padding: 4px 8px;" title="Reschedule appointment by +7 days">📅 +7 Days</button>
           ` : ''}
-          <button class="btn-icon-danger delete-task-btn" data-id="${task._id}" title="Delete Task">
+          <button class="btn-icon-danger delete-task-btn" data-id="${task._id}" title="Delete Schedule">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -404,17 +404,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (createTaskForm) {
     createTaskForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const taskType = taskTypeInput ? taskTypeInput.value : 'general';
+      const taskType = taskTypeInput ? taskTypeInput.value : 'appointment';
       const title = taskTitleInput.value.trim();
       const description = taskDescInput.value.trim();
       const priority = taskPriorityInput.value;
 
-      const bookTitle = taskBookTitle ? taskBookTitle.value.trim() : '';
-      const author = taskAuthor ? taskAuthor.value.trim() : '';
-      const borrowerName = taskBorrower ? taskBorrower.value.trim() : '';
-      const pagesPerDay = taskPagesPerDay ? taskPagesPerDay.value : 0;
-      const startPage = taskStartPage ? taskStartPage.value : 0;
-      const endPage = taskEndPage ? taskEndPage.value : 0;
+      const locationVal = taskBookTitle ? taskBookTitle.value.trim() : '';
+      const clientVal = taskAuthor ? taskAuthor.value.trim() : '';
+      const durationVal = taskBorrower ? taskBorrower.value : 30;
       const dueDate = taskDueDate ? taskDueDate.value : null;
 
       if (!title) return;
@@ -427,12 +424,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             taskType,
             title,
             description,
-            bookTitle,
-            author,
-            borrowerName,
-            pagesPerDay,
-            startPage,
-            endPage,
+            location: locationVal,
+            clientName: clientVal,
+            durationMinutes: durationVal,
+            bookTitle: locationVal,
+            author: clientVal,
+            borrowerName: durationVal ? `${durationVal} mins` : '',
             priority,
             dueDate,
           }),
@@ -444,14 +441,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           taskDescInput.value = '';
           if (taskBookTitle) taskBookTitle.value = '';
           if (taskAuthor) taskAuthor.value = '';
-          if (taskBorrower) taskBorrower.value = '';
+          if (taskBorrower) taskBorrower.value = '30';
           if (taskDueDate) taskDueDate.value = '';
           await fetchTasks();
         } else {
-          alert(data.message || 'Failed to create task');
+          alert(data.message || 'Failed to create schedule');
         }
       } catch (err) {
-        alert('Error saving reminder');
+        alert('Error saving schedule');
       }
     });
   }
@@ -463,10 +460,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (data.success) {
         await fetchTasks();
       } else {
-        alert(data.message || 'Failed to extend loan');
+        alert(data.message || 'Failed to reschedule appointment');
       }
     } catch (err) {
-      alert('Error extending loan');
+      alert('Error rescheduling appointment');
     }
   }
 
