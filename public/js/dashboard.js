@@ -400,14 +400,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (filterReadingBtn) filterReadingBtn.addEventListener('click', () => setActiveFilter(filterReadingBtn, 'reading'));
   if (filterCompletedBtn) filterCompletedBtn.addEventListener('click', () => setActiveFilter(filterCompletedBtn, 'completed'));
 
+  // Restrict calendar input so user cannot select dates in the past
+  if (taskDueDate) {
+    const updateMinDate = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      taskDueDate.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+    updateMinDate();
+    taskDueDate.addEventListener('focus', updateMinDate);
+  }
+
+  // Screen Toast Notification Helper
+  function showScreenNotification(msg = "You schedule have beenn setup!") {
+    const toast = document.getElementById('toast-notification');
+    const msgEl = document.getElementById('toast-message');
+    if (msgEl) msgEl.textContent = msg;
+    if (toast) {
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4500);
+    }
+  }
+
   // Task Submission Form
   if (createTaskForm) {
     createTaskForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const taskType = taskTypeInput ? taskTypeInput.value : 'appointment';
       const title = taskTitleInput.value.trim();
-      const description = taskDescInput.value.trim();
-      const priority = taskPriorityInput.value;
+      const description = taskDescInput ? taskDescInput.value.trim() : '';
+      const priority = taskPriorityInput ? taskPriorityInput.value : 'medium';
 
       const locationVal = taskBookTitle ? taskBookTitle.value.trim() : '';
       const clientVal = taskAuthor ? taskAuthor.value.trim() : '';
@@ -415,6 +443,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dueDate = taskDueDate ? taskDueDate.value : null;
 
       if (!title) return;
+
+      if (dueDate) {
+        const selectedDate = new Date(dueDate);
+        const now = new Date();
+        if (selectedDate < now) {
+          alert('Selected date/time cannot be in the past. Please select a future date & time.');
+          return;
+        }
+      }
 
       try {
         const res = await fetch('/api/tasks', {
@@ -438,11 +475,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await res.json();
         if (data.success) {
           taskTitleInput.value = '';
-          taskDescInput.value = '';
+          if (taskDescInput) taskDescInput.value = '';
           if (taskBookTitle) taskBookTitle.value = '';
           if (taskAuthor) taskAuthor.value = '';
           if (taskBorrower) taskBorrower.value = '30';
           if (taskDueDate) taskDueDate.value = '';
+
+          showScreenNotification("You schedule have beenn setup!");
           await fetchTasks();
         } else {
           alert(data.message || 'Failed to create schedule');

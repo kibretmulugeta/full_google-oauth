@@ -16,6 +16,14 @@
     </div>
   </div>
 
+  <!-- Screen Toast Notification -->
+  <div id="toast-notification" class="toast-notification hidden">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 1.2rem;">✅</span>
+      <span id="toast-message" style="font-weight: 600;">You schedule have beenn setup!</span>
+    </div>
+  </div>
+
   <!-- Dashboard Content -->
   <main id="dashboard-content" class="container hidden">
     <div class="card" style="max-width: 900px;">
@@ -80,64 +88,48 @@
         </div>
       </div>
 
-      <!-- Appointment & Schedule Creation Form -->
+      <!-- Streamlined Appointment & Schedule Creation Form -->
       <div style="margin-bottom: 28px; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
         <h2 style="margin-top: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
-          📅 Create Appointment & Schedule Event
+          📅 Set Up New Schedule
         </h2>
         <form id="create-task-form">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
             <div>
-              <label class="form-label" style="font-size: 0.75rem;">Schedule Category *</label>
+              <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Agenda *</label>
+              <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Project Sync / Doctor Appointment" required />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Place / Location *</label>
+              <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Google Meet / Room 302" required />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px;">
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Date & Time *</label>
+              <input type="datetime-local" id="task-due-date" class="form-input" required />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Schedule Category</label>
               <select id="task-type-input" class="form-select" style="font-weight: 600;">
-                <option value="appointment">📅 Appointment / Booking</option>
-                <option value="meeting">🤝 Client / Team Meeting</option>
-                <option value="event">🎉 Event & Reminder</option>
-                <option value="general">📝 General Task</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Schedule Title *</label>
-              <input type="text" id="task-title-input" class="form-input" placeholder="e.g. Dental Checkup / Project Sync" required />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Priority</label>
-              <select id="task-priority-input" class="form-select">
-                <option value="low">Priority: Low</option>
-                <option value="medium" selected>Priority: Medium</option>
-                <option value="high">Priority: High</option>
+                <option value="appointment">📅 Appointment</option>
+                <option value="meeting">🤝 Meeting</option>
+                <option value="event">🎉 Event</option>
+                <option value="general">📝 General</option>
               </select>
             </div>
           </div>
 
-          <!-- Dynamic Scheduling Fields -->
-          <div id="book-fields-box" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Location / Video Link</label>
-              <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Google Meet / Room 302" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Client / Attendee Name</label>
-              <input type="text" id="task-author" class="form-input" placeholder="e.g. Jane Smith / Tech Team" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Duration (Minutes)</label>
-              <input type="number" id="task-borrower" class="form-input" placeholder="30" value="30" />
-            </div>
-          </div>
+          <!-- Hidden default fields for backwards compatibility -->
+          <input type="hidden" id="task-priority-input" value="medium" />
+          <input type="hidden" id="task-author" value="" />
+          <input type="hidden" id="task-borrower" value="30" />
+          <input type="hidden" id="task-desc-input" value="" />
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Appointment Date & Time *</label>
-              <input type="datetime-local" id="task-due-date" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label" style="font-size: 0.75rem;">Agenda / Notes</label>
-              <input type="text" id="task-desc-input" class="form-input" placeholder="Meeting agenda or notes..." />
-            </div>
-          </div>
-
-          <button type="submit" class="btn-primary" style="width: auto; padding: 10px 24px;">+ Schedule Appointment</button>
+          <button type="submit" class="btn-primary" style="width: auto; padding: 10px 28px; font-weight: 600;">
+            + Set Schedule
+          </button>
         </form>
       </div>
 
