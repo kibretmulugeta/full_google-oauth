@@ -101,7 +101,12 @@
             </div>
             <div>
               <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Place / Location *</label>
-              <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Google Meet / Room 302" required />
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="task-book-title" class="form-input" placeholder="e.g. Google Meet / Room 302" required />
+                <button type="button" id="get-live-location-btn" class="btn-primary" style="width: auto; padding: 0 14px; font-size: 0.8rem; white-space: nowrap; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); flex-shrink: 0;" title="Detect current GPS location">
+                  📍 Live Location
+                </button>
+              </div>
             </div>
           </div>
 

@@ -428,6 +428,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Live Location Detection
+  const liveLocationBtn = document.getElementById('get-live-location-btn');
+  if (liveLocationBtn) {
+    liveLocationBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      liveLocationBtn.textContent = '📡 Locating...';
+      liveLocationBtn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude.toFixed(5);
+          const lon = position.coords.longitude.toFixed(5);
+
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await res.json();
+            const placeName = data.display_name || `📍 Lat: ${lat}, Lon: ${lon}`;
+            if (taskBookTitle) taskBookTitle.value = placeName;
+            showScreenNotification(`📍 Live location detected!`);
+          } catch (err) {
+            if (taskBookTitle) taskBookTitle.value = `📍 Lat: ${lat}, Lon: ${lon}`;
+            showScreenNotification(`📍 Live GPS coordinates filled!`);
+          } finally {
+            liveLocationBtn.textContent = '📍 Live Location';
+            liveLocationBtn.disabled = false;
+          }
+        },
+        (error) => {
+          liveLocationBtn.textContent = '📍 Live Location';
+          liveLocationBtn.disabled = false;
+          alert(`Unable to retrieve location: ${error.message}`);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+
   // Task Submission Form
   if (createTaskForm) {
     createTaskForm.addEventListener('submit', async (e) => {
